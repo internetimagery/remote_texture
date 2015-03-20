@@ -54,7 +54,6 @@ def check_last_action():
 		path = data[0][1]
 		cachePath = cache_file(path)
 		cmds.setAttr("%s.fileTextureName" % node, cachePath, type="string")
-		print "%s's path changed to %s from %s" %( node, cachePath, path )
 
-cmds.scriptJob( ie=check_last_action, ro=True )
+cmds.scriptJob( ie=check_last_action)
 print "Remote Texture is watching for http files..."
