@@ -1,4 +1,4 @@
-# remote-texture
+# Remote Texture
 automatic downloading of textures from the internet, for autodesk maya
 
 ###Installation
