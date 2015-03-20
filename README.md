@@ -7,7 +7,7 @@ automatic downloading of textures from the internet, for autodesk maya
 * Create a shelf icon and add the following PYTHON code:
 
 ``` python
-import remote-texture
+import remote_texture
 ```
 
 You're done!
