@@ -2,7 +2,7 @@
 
 # Modify textures to use remote destinations.
 import maya.cmds as cmds
-import re, os, hashlib, urllib2
+import re, os, hashlib, urllib2, datetime, json
 
 def cache_file(dest):
 	#ensure Cache exists
@@ -11,13 +11,20 @@ def cache_file(dest):
 	if not os.path.exists(cache):
 		os.makedirs(cache)
 	uid = hashlib.sha224(dest).hexdigest()
-	uidPath = os.path.join( cache, uid)
-	if not os.path.isfile(uidPath):
+	uidPath = os.path.join( cache, uid) # Unique path for the file to sit in
+	fileName = dest.split('/')[-1]
+	filePath = os.path.join( uidPath, fileName ) # Path to the cache file
+	metaPath = os.path.join( uidPath, "meta.txt") # Path for file information
+	if os.path.isfile(filePath):
+		return filePath
+	else:
 		try:
+			# Create unique directory for our files
+			if not os.path.exists(uidPath):
+				os.makedirs(uidPath)
 			# Download File
-			fileName = dest.split('/')[-1]
 			u = urllib2.urlopen(dest)
-			f = open(uidPath, "wb")
+			f = open(filePath, "wb")
 			meta = u.info()
 			fileSize = int(meta.getheaders("Content-Length")[0])
 			allowed = ['image/jpg','image/jpeg','image/png','image/gif'] # List of allowed file types
@@ -37,9 +44,15 @@ def cache_file(dest):
 					print status
 				print "Download Complete."
 				f.close()
+				# Store meta information from the file
+				metaData = { "downloaded" : datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S'), "url" : dest, "name" : fileName }
+				m = open(metaPath, "w")
+				m.write(json.dumps(metaData))
+				m.close()
+				return filePath
 		except urllib2.HTTPError, e:
 			print "Url does not work. Sorry. :(", e
-	return uidPath
+	return False
 
 global preparedRegex
 preparedRegex = re.compile("^setAttr.*(file\d+)\.fileTextureName\\s\"(https?://.*)\"")
@@ -53,7 +66,10 @@ def check_last_action():
 		node = data[0][0]
 		path = data[0][1]
 		cachePath = cache_file(path)
-		cmds.setAttr("%s.fileTextureName" % node, cachePath, type="string")
+		if cachePath:
+			cmds.setAttr("%s.fileTextureName" % node, cachePath, type="string")
+		else:
+			cmds.setAttr("%s.fileTextureName" % node, "", type="string")
 
 cmds.scriptJob( ie=check_last_action)
 print "Remote Texture is watching for http files..."
