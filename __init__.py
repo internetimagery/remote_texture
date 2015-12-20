@@ -70,7 +70,7 @@ def background(func, interval=2):
         while True:
             time.sleep(interval)
             block.acquire()
-            utils.executeDeferred(lambda: cmds.scriptJob(ro=True, ie=lambda: block.release(), func()))
+            utils.executeDeferred(lambda: cmds.scriptJob(ro=True, ie=(lambda: block.release(), func())))
 
     threading.Thread(target=run).start()
     print "Running %s" % repr(func)
