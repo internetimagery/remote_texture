@@ -1,12 +1,26 @@
 # Download textures if URLS are found in filenames
+# Created By Jason Dixon. http://internetimagery.com
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
 import re
+import time
 import shutil
 import os.path
 import urllib2
 import hashlib
 import tempfile
+import threading
 import maya.cmds as cmds
+import maya.utils as utils
 
 TEXTURE_FOLDER = "Online_Textures"
 URL = re.compile(r"^https?://")
@@ -42,11 +56,27 @@ def download(url, restricted_to=['image/jpg','image/jpeg','image/png','image/gif
             downloaded += len(buff)
             print "[%8d] - [%3.2f%%]" % (downloaded, (downloaded * 100.0 / dl_size) if dl_size else 100)
             yield buff
+            cmds.refresh()
 
         print "Download Complete."
     except urllib2.HTTPError, e:
         raise IOError, e
 
+def background(func, interval=2):
+    """ Run function over and over in background """
+    block = threading.Semaphore() # Don't throttle Maya
+
+    def run2():
+        block.release()
+        func()
+
+    def run1():
+        while True:
+            block.acquire()
+            utils.executeDeferred(lambda: cmds.scriptJob(ro=True, ie=run2))
+            time.sleep(interval)
+
+    threading.Thread(target=run1).start()
 
 def main():
     """ Check for files """
@@ -74,7 +104,3 @@ def main():
                         set_texture(node, path.replace("\\", "/"))
                 except IOError as e:
                     print "Warning:", e
-
-
-if __name__ == '__main__':
-    main()
