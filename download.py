@@ -33,9 +33,7 @@ def download(url, restricted_to=['image/jpg','image/jpeg','image/png','image/gif
             if not buff:
                 break
             downloaded += len(buff)
-
             print "[%8d] - [%3.2f%%]" % (downloaded, (downloaded * 100.0 / dl_size) if dl_size else 100)
-
             yield buff
 
         print "Download Complete."
