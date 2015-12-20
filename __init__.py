@@ -13,6 +13,7 @@
 
 import re
 import time
+import report
 import shutil
 import os.path
 import urllib2
@@ -75,6 +76,7 @@ def background(func, interval=2):
     threading.Thread(target=run).start()
     print "Running %s" % repr(func)
 
+@report.Report()
 def main():
     """ Check for files """
     scene = cmds.file(q=True, sn=True) or None
