@@ -66,17 +66,14 @@ def background(func, interval=2):
     """ Run function over and over in background """
     block = threading.Semaphore() # Don't throttle Maya
 
-    def run2():
-        block.release()
-        func()
-
-    def run1():
+    def run():
         while True:
-            block.acquire()
-            utils.executeDeferred(lambda: cmds.scriptJob(ro=True, ie=run2))
             time.sleep(interval)
+            block.acquire()
+            utils.executeDeferred(lambda: cmds.scriptJob(ro=True, ie=lambda: block.release(), func()))
 
-    threading.Thread(target=run1).start()
+    threading.Thread(target=run).start()
+    print "Running %s" % repr(func)
 
 def main():
     """ Check for files """
@@ -88,6 +85,7 @@ def main():
             if not os.path.isdir(folder):
                 os.mkdir(folder)
             for node, url in textures.iteritems():
+                set_texture(node, "") # Keep broken urls from continuous checking
                 try:
                     with tempfile.SpooledTemporaryFile() as tmp:
                         md5 = hashlib.md5()
