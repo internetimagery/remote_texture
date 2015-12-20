@@ -1,6 +1,7 @@
 # Download textures if URLS are found in filenames
 
 import re
+import shutil
 import os.path
 import urllib2
 import hashlib
@@ -58,13 +59,19 @@ def main():
                 os.mkdir(folder)
             for node, url in textures.iteritems():
                 try:
-                    with tempfile.NamedTemporaryFile() as tmp:
+                    with tempfile.SpooledTemporaryFile() as tmp:
                         md5 = hashlib.md5()
                         for data in download(url):
                             md5.update(data)
                             tmp.write(data)
-                        name = md5.hexdigest()
-                        print name
+                        ext = url.split(".")[-1]
+                        name = md5.hexdigest() + ".%s" % ext if ext else ""
+                        path = os.path.join(folder, name)
+                        if not os.path.isfile(path): # Doesn't exist
+                            with open(path, "w") as f:
+                                tmp.seek(0)
+                                f.write(tmp.read())
+                        set_texture(node, path.replace("\\", "/"))
                 except IOError as e:
                     print "Warning:", e
 
