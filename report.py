@@ -62,9 +62,9 @@ class Report(object):
                 text = [
                     str(datetime.datetime.now()),
                     platform.platform(),
-                    "%s: %s" % (eType.__name__, eVal)
+                    "%s: %s" % (eType.__name__, eVal),
+                    s.software()
                     ]
-                text += list(s.software())
                 text += list(s.compact_trace(eTrace))
 
                 url = "mailto:%s?subject=%s&body=%s" % (
