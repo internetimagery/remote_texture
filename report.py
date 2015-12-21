@@ -92,9 +92,10 @@ class Report(object):
         try:
             import maya.mel as mel
             version = mel.eval("$tmp = getApplicationVersionAsFloat();")
-            yield "Software: Maya, %s" % version
+            return "Maya, %s" % version
         except ImportError:
             pass
+        return "Unknown software."
 
     def compact_trace(s, trace):
         """ Format traceback compactly """
